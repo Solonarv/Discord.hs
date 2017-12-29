@@ -46,6 +46,8 @@ module Network.Discord.Rest.Guild
       --   CREATE_INSTANT_INVITE permission.
       AddGuildMember           :: ToJSON a => Snowflake -> Snowflake -> a 
                                     -> GuildRequest Member
+      -- | Modify the current user's nickname in a guild.
+      ModifyOwnNick            :: Snowflake -> Text -> GuildRequest () 
       -- | Modify attributes of a guild 'Member'. Fires a Guild Member Update 'Event'.
       ModifyGuildMember        :: ToJSON a => Snowflake -> Snowflake -> a 
                                     -> GuildRequest ()
@@ -123,6 +125,7 @@ module Network.Discord.Rest.Guild
       hashWithSalt s (GetGuildMember g _)      = hashWithSalt s ("guild_memb"::Text, g)
       hashWithSalt s (ListGuildMembers g _)    = hashWithSalt s ("guild_membs"::Text, g)
       hashWithSalt s (AddGuildMember g _ _)    = hashWithSalt s ("guild_memb"::Text, g)
+      hashWithSalt s (ModifyOwnNick g _)       = hashWithSalt s ("guild_memb"::Text, g)
       hashWithSalt s (ModifyGuildMember g _ _) = hashWithSalt s ("guild_memb"::Text, g)
       hashWithSalt s (RemoveGuildMember g _)   = hashWithSalt s ("guild_memb"::Text, g)
       hashWithSalt s (GetGuildBans g)          = hashWithSalt s ("guild_bans"::Text, g)
@@ -172,6 +175,10 @@ module Network.Discord.Rest.Guild
             $ Get (url // guild /: "members") (toQueryString range)
           go r@(AddGuildMember guild user patch) = makeRequest r
             $ Put (url // guild /: "members" // user) (ReqBodyJson patch) mempty
+          go r@(ModifyOwnNick guild newNick) = makeRequest r
+            $ Patch (url // guild /: "members" /: "@me" /: "nick")
+              (ReqBodyJson $ object ["nick" .= newNick])
+              mempty 
           go r@(ModifyGuildMember guild member patch) = makeRequest r
             $ Patch (url // guild /: "members" // member) (ReqBodyJson patch) mempty
           go r@(RemoveGuildMember guild user) = makeRequest r
