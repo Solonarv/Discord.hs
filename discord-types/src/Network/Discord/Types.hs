@@ -25,4 +25,5 @@ module Network.Discord.Types
     class (MonadIO m, MonadPlus m) => DiscordAuth m where
       auth :: m Auth
       version :: m String
+      userAgent :: m String
       runIO :: m a -> IO a

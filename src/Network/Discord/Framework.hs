@@ -29,9 +29,10 @@ module Network.Discord.Framework where
       DiscordApp (\c e -> f c e <*> a c e)
 
   instance DiscordAuth (DiscordApp m) where
-    auth    = DiscordApp $ \_ _ -> auth
-    version = DiscordApp $ \_ _ -> version
-    runIO   = fail "DiscordApp cannot be lifted to IO"
+    auth      = DiscordApp $ \_ _ -> auth
+    version   = DiscordApp $ \_ _ -> version
+    userAgent = DiscordApp $ \_ _ -> userAgent
+    runIO     = fail "DiscordApp cannot be lifted to IO"
 
   rateLimits :: Vault (DiscordApp m) [(Int, Int)]
   rateLimits = unsafePerformIO $ newMVar []
