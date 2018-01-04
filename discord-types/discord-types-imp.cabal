@@ -1,4 +1,4 @@
-name:                discord-types
+name:                discord-types-imp
 version:             0.2.2
 synopsis:            Type information for discord-hs
 description:         Type information for discord-hs
