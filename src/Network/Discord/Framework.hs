@@ -28,7 +28,10 @@ module Network.Discord.Framework where
     DiscordApp f <*> DiscordApp a =
       DiscordApp (\c e -> f c e <*> a c e)
 
-  instance DiscordAuth (DiscordApp m) where
+  instance MonadTrans DiscordApp where
+    lift m = DiscordApp $ \_ _ -> m
+
+  instance MonadIO m => DiscordAuth (DiscordApp m) where
     auth      = DiscordApp $ \_ _ -> auth
     version   = DiscordApp $ \_ _ -> version
     userAgent = DiscordApp $ \_ _ -> userAgent
@@ -77,7 +80,7 @@ module Network.Discord.Framework where
     feed m event = do
       liftIO $ print "Running event handler"
       c <- connection
-      _ <- liftIO . runIO $ runEvent m c event
+      _ <- lift $ runEvent m c event
       liftIO $ print "Returning from handler"
 
     run m conn =
@@ -95,8 +98,8 @@ module Network.Discord.Framework where
       a <- runEvent m c e
       runEvent (k a) c e
 
-  instance MonadIO (DiscordApp m) where
-    liftIO f = DiscordApp (\_ _ -> liftIO f)
+  instance MonadIO m => MonadIO (DiscordApp m) where
+    liftIO = lift . liftIO
 
   instance MonadPlus (DiscordApp m)
 
