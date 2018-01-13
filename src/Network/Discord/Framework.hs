@@ -11,6 +11,7 @@ module Network.Discord.Framework where
   import Network.Discord.Gateway
   import Network.Discord.Types
 
+  import Control.Monad.IO.Unlift
   import Control.Monad.Reader
   import Data.Hashable
   import Network.WebSockets (Connection)
@@ -31,11 +32,12 @@ module Network.Discord.Framework where
   instance MonadTrans DiscordApp where
     lift m = DiscordApp $ \_ _ -> m
 
-  instance MonadIO m => DiscordAuth (DiscordApp m) where
-    auth      = DiscordApp $ \_ _ -> auth
-    version   = DiscordApp $ \_ _ -> version
-    userAgent = DiscordApp $ \_ _ -> userAgent
-    runIO     = fail "DiscordApp cannot be lifted to IO"
+  instance DiscordAuth m => DiscordAuth (DiscordApp m) where
+    auth      = lift auth
+    version   = lift version
+    userAgent = lift userAgent
+    runIO     = fail $ "DiscordApp cannot be run in IO directly,"
+                    ++ " try Network.Discord.Gateway.run instead"
 
   rateLimits :: Vault (DiscordApp m) [(Int, Int)]
   rateLimits = unsafePerformIO $ newMVar []
@@ -85,10 +87,10 @@ module Network.Discord.Framework where
 
     run m conn =
       runIO $ (runEvent $ eventStream Create m) conn Nil
-    fork m = do
-      c <- connection
-      _ <- DiscordApp $ \_ e -> liftIO . forkIO . runIO $ runEvent m c e
-      return ()
+    -- fork m = do
+    --   c <- connection
+    --   _ <- DiscordApp $ \_ e -> liftIO . forkIO . runIO $ runEvent m c e
+    --   return ()
 
   instance Functor (DiscordApp m) where
     f `fmap` DiscordApp a = DiscordApp (\c e -> f `fmap` a c e)
@@ -100,6 +102,11 @@ module Network.Discord.Framework where
 
   instance MonadIO m => MonadIO (DiscordApp m) where
     liftIO = lift . liftIO
+
+  instance MonadUnliftIO m => MonadUnliftIO (DiscordApp m) where
+    askUnliftIO = DiscordApp $ \c e -> do
+      UnliftIO u <- askUnliftIO
+      return $ UnliftIO $ \m -> u $ runEvent m c e
 
   instance MonadPlus (DiscordApp m)
 

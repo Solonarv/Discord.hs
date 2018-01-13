@@ -4,11 +4,12 @@
 --   gateway. Reallistically, this is probably lower level than most
 --   people will need, and you should use Language.Discord.
 module Network.Discord.Gateway where
-  import Control.Concurrent (threadDelay)
-  import Control.Monad (forever)
+  import Control.Concurrent (threadDelay, forkIO)
+  import Control.Monad (forever, void)
   import Control.Monad.IO.Class (liftIO)
   import Data.Maybe (fromJust)
 
+  import Control.Monad.IO.Unlift
   import Data.Aeson
   import Network.WebSockets hiding (send)
   import Network.URL
@@ -39,8 +40,10 @@ module Network.Discord.Gateway where
     connection   :: m Connection
     feed :: m () -> Event -> m ()
 
-    run  :: m () -> Connection -> IO ()
-    fork :: m () -> m ()
+    run :: m () -> Connection -> IO ()
+
+  fork :: DiscordGate m => m () -> m ()
+  fork act = withRunInIO $ \runInIO -> void $ forkIO $ runInIO act
 
   runGateway :: DiscordGate m => URL -> m () -> IO ()
   runGateway (URL (Absolute h) path _) client =

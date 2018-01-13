@@ -19,10 +19,10 @@ module Network.Discord.Types
     import Network.Discord.Types.Guild
     import Network.Discord.Types.Prelude
 
-    import Control.Monad.IO.Class
+    import Control.Monad.IO.Unlift
     import Data.Aeson (Object)
 
-    class (MonadIO m, MonadPlus m) => DiscordAuth m where
+    class (MonadUnliftIO m, MonadPlus m) => DiscordAuth m where
       auth :: m Auth
       version :: m String
       userAgent :: m String

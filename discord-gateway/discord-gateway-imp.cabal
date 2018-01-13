@@ -25,6 +25,8 @@ library
                      , url==2.1.*
                      , websockets==0.10.*
                      , wuss==1.1.*
+                     , unliftio==0.1.*
+                     , unliftio-core==0.1.*
                      , discord-types-imp
   ghc-options:         -Wall
   hs-source-dirs:      src
